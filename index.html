@@ -1,31 +1,26 @@
-<!DOCTYPE html>
-<html lang="en" ng-app="NarrowItDownApp">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Narrow It Down</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
-  <script src="app.js"></script>
-  <style>
-    /* Add your CSS styles here */
-  </style>
-</head>
-<body>
-  <div ng-controller="NarrowItDownController as narrowCtrl">
-    <h1>Menu Item Search</h1>
-    <input type="text" ng-model="narrowCtrl.searchTerm" placeholder="Search menu items...">
-    <button ng-click="narrowCtrl.narrowItDown()">Narrow It Down For Me!</button>
 
-    <div ng-if="narrowCtrl.foundItems.length > 0">
-      <ul>
-        <li ng-repeat="item in narrowCtrl.foundItems">
-          <strong>{{ item.name }}</strong> ({{ item.short_name }}) - {{ item.description }}
-          <button ng-click="narrowCtrl.onRemove($index)">Don't want this one!</button>
-        </li>
-      </ul>
+<!doctype html>
+<html ng-app="NarrowItDownApp" lang="en">
+  <head>
+    <title>Narrow Down Your Menu Choice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="app.js"></script>
+  </head>
+<body ng-controller='NarrowItDownController as narrowCtrl' >
+   <div class="container">
+    <h1>Narrow Down Your Chinese Menu Choice</h1>
+
+    <div class="form-group">
+      <input ng-model="narrowCtrl.searchTerm" type="text" placeholder="search term" class="form-control">
+    </div>
+    <div class="form-group narrow-button">
+      <button ng-click="narrowCtrl.search()" class="btn btn-primary">Narrow It Down For Me!</button>
     </div>
 
-    <p ng-if="narrowCtrl.foundItems.length === 0 && narrowCtrl.searchTerm">Nothing found</p>
+  </div>
+  <div class="container">
+    <found-items items="narrowCtrl.found" on-remove="narrowCtrl.remove(index)"></found-items>
   </div>
 </body>
 </html>

@@ -1,52 +1,75 @@
-// Define the Angular module
-angular.module('NarrowItDownApp', [])
-
-// Define the MenuSearchService
-.service('MenuSearchService', ['$http', function($http) {
-  var service = this;
-
-  service.getMatchedMenuItems = function(searchTerm) {
-    return $http({
-      method: 'GET',
-      url: 'https://coursera-jhu-default-rtdb.firebaseio.com/menu_items.json'
-    }).then(function(response) {
-      var foundItems = [];
-      var menuItems = response.data;
-      if (menuItems) {
-        for (var i = 0; i < menuItems.length; i++) {
-          if (menuItems[i].description.toLowerCase().includes(searchTerm.toLowerCase())) {
-            foundItems.push(menuItems[i]);
+(function () {
+  'use strict';
+  
+  angular.module('NarrowItDownApp', [])
+  .controller('NarrowItDownController', NarrowItDownController)
+  .service('MenuSearchService', MenuSearchService)
+  .constant('ApiBasePath', "https://coursera-jhu-default-rtdb.firebaseio.com")
+  .directive('foundItems', FoundItemsDirective);
+  
+  function FoundItemsDirective() {
+      var ddo = {
+          templateUrl: 'found.html',
+          scope: {
+              items: '<',
+              onRemove: '&'
           }
-        }
+      };
+
+      return ddo;
+  }
+
+  
+  NarrowItDownController.$inject = ['MenuSearchService'];
+  function NarrowItDownController(MenuSearchService) {
+    var narrowCtrl = this;
+    narrowCtrl.searchTerm = '';
+    narrowCtrl.found = [];
+
+    narrowCtrl.search = function () {
+      narrowCtrl.found = [];
+      if (narrowCtrl.searchTerm.trim() != "") {
+          var promise = MenuSearchService.getMatchedMenuItems(narrowCtrl.searchTerm);
+          promise.then(function (result) {
+              narrowCtrl.found = result;
+              console.log(result);
+          })
+          .catch(function (error) {
+              console.log("Something went wrong: " + error);
+          });
       }
-      return foundItems;
-    }).catch(function(error) {
-      console.error('Error retrieving menu items:', error);
-      return [];
-    });
-  };
-}])
-
-// Define the NarrowItDownController
-.controller('NarrowItDownController', ['MenuSearchService', function(MenuSearchService) {
-  var narrowCtrl = this;
-
-  narrowCtrl.searchTerm = '';
-  narrowCtrl.foundItems = [];
-
-  narrowCtrl.narrowItDown = function() {
-    if (narrowCtrl.searchTerm.trim() === '') {
-      narrowCtrl.foundItems = [];
-      return;
     }
 
-    MenuSearchService.getMatchedMenuItems(narrowCtrl.searchTerm)
-      .then(function(foundItems) {
-        narrowCtrl.foundItems = foundItems;
+    narrowCtrl.remove = function (index) {
+      narrowCtrl.found.splice(index, 1);
+    }
+  
+  }
+  
+  
+  MenuSearchService.$inject = ['$http', 'ApiBasePath'];
+  function MenuSearchService($http, ApiBasePath) {
+    var service = this;
+  
+    service.getMatchedMenuItems = function (searchTerm) {
+      var response = $http({
+        method: "GET",
+        url: (ApiBasePath + "/menu_items.json")
       });
-  };
-
-  narrowCtrl.onRemove = function(index) {
-    narrowCtrl.foundItems.splice(index, 1);
-  };
-}]);
+  
+      return response.then(function (result) {
+          var searchItems = [];
+          var data = result.data;
+    
+          for (var category in data) {
+              searchItems.push( data[category].menu_items.filter( item => item.description.toLowerCase().includes(searchTerm.toLowerCase()) )
+              );
+          }
+          return searchItems.flat();
+      });
+    };
+  
+  }
+  
+  })();
+  
